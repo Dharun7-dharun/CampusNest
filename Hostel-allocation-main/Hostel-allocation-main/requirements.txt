@@ -1,0 +1,11 @@
+fastapi
+uvicorn[standard]
+httpx
+python-multipart
+pydantic
+scikit-learn
+numpy
+firebase-admin
+python-dotenv
+pandas
+openpyxl

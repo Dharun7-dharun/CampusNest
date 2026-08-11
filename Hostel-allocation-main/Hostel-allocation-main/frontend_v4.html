@@ -1,0 +1,1138 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>HostelAI — Premium Accommodation</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Playfair+Display:ital,wght@0,600;0,700;1,600&display=swap" rel="stylesheet" />
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+  <style>
+    :root {
+      --primary: #3b82f6;
+      --primary-hover: #60a5fa;
+      --secondary: #10b981;
+      --dark: #0f172a;
+      --light: #f8fafc;
+      --success: #10b981;
+      --danger: #ef4444;
+      --warning: #f59e0b;
+
+      --surface: rgba(30, 41, 59, 0.7);
+      --glass: rgba(255, 255, 255, 0.05);
+      --border: rgba(255, 255, 255, 0.1);
+      --shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.4);
+
+      --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: 'Inter', sans-serif;
+    }
+
+    body {
+      background: #0f172a;
+      color: var(--light);
+      overflow: hidden;
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* Backgrounds */
+    .bg-student {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+      z-index: -2;
+    }
+
+    .orb {
+      position: fixed;
+      border-radius: 50%;
+      filter: blur(80px);
+      z-index: -1;
+      animation: float 20s infinite ease-in-out;
+    }
+    .orb-1 { width: 40vw; height: 40vw; background: rgba(37, 99, 235, 0.15); top: -10%; left: -10%; }
+    .orb-2 { width: 50vw; height: 50vw; background: rgba(16, 185, 129, 0.1); bottom: -20%; right: -10%; animation-delay: -5s; }
+    .orb-3 { width: 30vw; height: 30vw; background: rgba(139, 92, 246, 0.15); top: 40%; left: 40%; animation-delay: -10s; }
+
+    @keyframes float {
+      0%, 100% { transform: translate(0, 0) scale(1); }
+      33% { transform: translate(30px, -50px) scale(1.05); }
+      66% { transform: translate(-20px, 20px) scale(0.95); }
+    }
+
+    h1, h2, h3 { font-family: 'Playfair Display', serif; }
+
+    /* Navbar */
+    header {
+      padding: 1rem 4rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: transparent;
+      position: relative;
+      z-index: 100;
+      height: 70px;
+    }
+
+    header.admin-mode {
+      background: rgba(15, 23, 42, 0.6);
+      backdrop-filter: blur(10px);
+      border-bottom: 1px solid var(--border);
+    }
+
+    .logo {
+      font-size: 1.8rem;
+      font-weight: 800;
+      color: white;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      letter-spacing: -0.5px;
+    }
+
+    .logo span { color: var(--primary-hover); }
+
+    nav {
+      display: flex;
+      gap: 2rem;
+      align-items: center;
+    }
+
+    .nav-btn {
+      background: transparent;
+      border: none;
+      color: #cbd5e1;
+      font-weight: 500;
+      font-size: 1rem;
+      cursor: pointer;
+      transition: var(--transition);
+    }
+
+    .nav-btn:hover { color: white; }
+
+    .btn-primary {
+      background: var(--primary);
+      color: white;
+      padding: 10px 24px;
+      border-radius: 30px;
+      font-weight: 600;
+      border: none;
+      cursor: pointer;
+      transition: var(--transition);
+    }
+
+    .btn-primary:hover {
+      background: var(--primary-hover);
+      transform: translateY(-2px);
+      box-shadow: 0 10px 20px rgba(37, 99, 235, 0.2);
+    }
+
+    .btn-danger {
+      background: rgba(239, 68, 68, 0.2);
+      color: #fca5a5;
+      padding: 6px 14px;
+      border-radius: 8px;
+      border: 1px solid rgba(239, 68, 68, 0.3);
+      cursor: pointer;
+      font-size: 0.85rem;
+      font-weight: 600;
+      transition: var(--transition);
+    }
+    .btn-danger:hover {
+      background: var(--danger);
+      color: white;
+    }
+
+    /* Views */
+    .view {
+      display: none;
+      height: calc(100vh - 70px);
+      padding: 1.5rem 4rem;
+      animation: fadeIn 0.5s ease;
+      overflow-y: auto;
+    }
+
+    .view.active {
+      display: flex;
+      flex-direction: column;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* Student Landing */
+    .hero {
+      max-width: 800px;
+      margin-top: 8vh;
+      color: white;
+    }
+
+    .hero h1 {
+      font-size: 4.5rem;
+      line-height: 1.1;
+      margin-bottom: 1.5rem;
+    }
+
+    .hero p {
+      font-size: 1.15rem;
+      color: #94a3b8;
+      margin-bottom: 2.5rem;
+      max-width: 600px;
+      line-height: 1.6;
+    }
+
+    .hero-btns {
+      display: flex;
+      gap: 1rem;
+    }
+
+    .btn-glass {
+      background: rgba(255,255,255,0.05);
+      backdrop-filter: blur(10px);
+      border: 1px solid var(--border);
+      color: white;
+      padding: 14px 32px;
+      border-radius: 30px;
+      font-weight: 600;
+      font-size: 1.1rem;
+      cursor: pointer;
+      transition: var(--transition);
+    }
+
+    .btn-glass:hover {
+      background: rgba(255, 255, 255, 0.1);
+      transform: translateY(-2px);
+    }
+
+    /* Forms & Cards */
+    .glass-card {
+      background: var(--surface);
+      backdrop-filter: blur(20px);
+      border: 1px solid var(--border);
+      border-radius: 24px;
+      padding: 1.5rem 2.5rem;
+      box-shadow: var(--shadow);
+      max-width: 1000px;
+      width: 100%;
+      margin: auto;
+    }
+
+    .admin-card {
+      background: var(--surface);
+      backdrop-filter: blur(20px);
+      border-radius: 20px;
+      padding: 1.5rem;
+      box-shadow: var(--shadow);
+      margin-bottom: 1rem;
+      border: 1px solid var(--border);
+      color: white;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .form-group {
+      margin-bottom: 0.8rem;
+    }
+
+    label {
+      display: block;
+      font-weight: 500;
+      margin-bottom: 4px;
+      color: #94a3b8;
+      font-size: 0.8rem;
+    }
+
+    input, select, textarea {
+      width: 100%;
+      padding: 10px 14px;
+      border-radius: 10px;
+      border: 1px solid var(--border);
+      background: rgba(15, 23, 42, 0.5);
+      color: white;
+      font-family: inherit;
+      font-size: 0.9rem;
+      transition: var(--transition);
+    }
+
+    input:focus, select:focus, textarea:focus {
+      outline: none;
+      border-color: var(--primary-hover);
+      background: rgba(15, 23, 42, 0.8);
+      box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2);
+    }
+
+    /* Tags */
+    .tag-btn {
+      padding: 6px 14px;
+      border-radius: 20px;
+      border: 1px solid var(--border);
+      background: rgba(255,255,255,0.05);
+      color: #cbd5e1;
+      cursor: pointer;
+      font-size: 0.85rem;
+      font-weight: 500;
+      transition: var(--transition);
+      margin: 4px;
+    }
+
+    .tag-btn.active {
+      background: var(--primary);
+      color: white;
+      border-color: var(--primary);
+    }
+
+    /* Admin Dashboard Grid */
+    .dashboard-grid {
+      display: grid;
+      grid-template-columns: 220px 1fr;
+      gap: 1.5rem;
+      height: 100%;
+    }
+
+    .sidebar {
+      background: var(--surface);
+      backdrop-filter: blur(20px);
+      border-radius: 20px;
+      padding: 1.5rem 1rem;
+      height: 100%;
+      border: 1px solid var(--border);
+    }
+
+    .side-link {
+      display: block;
+      padding: 10px 16px;
+      border-radius: 10px;
+      color: #94a3b8;
+      font-weight: 600;
+      text-decoration: none;
+      cursor: pointer;
+      transition: var(--transition);
+      margin-bottom: 8px;
+    }
+
+    .side-link:hover, .side-link.active {
+      background: rgba(59, 130, 246, 0.15);
+      color: var(--primary-hover);
+    }
+
+    .admin-content {
+      height: 100%;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .admin-tab {
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    .table-container {
+      flex: 1;
+      overflow-y: auto;
+      border-radius: 12px;
+    }
+
+    /* Tables */
+    table {
+      width: 100%;
+      border-collapse: separate;
+      border-spacing: 0;
+    }
+
+    th, td {
+      padding: 0.8rem 1rem;
+      text-align: left;
+      border-bottom: 1px solid var(--border);
+      color: white;
+    }
+
+    th {
+      font-weight: 600;
+      color: #94a3b8;
+      font-size: 0.8rem;
+      text-transform: uppercase;
+      position: sticky;
+      top: 0;
+      background: rgba(30, 41, 59, 0.95);
+      backdrop-filter: blur(10px);
+      z-index: 10;
+    }
+
+    tr:hover td {
+      background: rgba(255, 255, 255, 0.05);
+    }
+
+    .chip {
+      padding: 4px 12px;
+      border-radius: 20px;
+      font-size: 0.8rem;
+      font-weight: 600;
+      text-transform: capitalize;
+    }
+
+    .chip.pending {
+      background: rgba(245, 158, 11, 0.2);
+      color: #fcd34d;
+      border: 1px solid rgba(245, 158, 11, 0.3);
+    }
+
+    .chip.allocated {
+      background: rgba(16, 185, 129, 0.2);
+      color: #6ee7b7;
+      border: 1px solid rgba(16, 185, 129, 0.3);
+    }
+
+    /* Status Check / Letter */
+    .status-box {
+      text-align: center;
+      padding: 3rem;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .letter-preview {
+      background: white;
+      border: 1px solid var(--border);
+      padding: 2rem;
+      text-align: left;
+      border-radius: 12px;
+      margin-top: 1.5rem;
+      display: none;
+      color: var(--dark);
+      width: 100%;
+      max-width: 600px;
+    }
+
+    .toast {
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      color: white;
+      padding: 1rem 2rem;
+      border-radius: 12px;
+      transform: translateY(150%);
+      transition: var(--transition);
+      z-index: 1000;
+      font-weight: 500;
+    }
+
+    .toast.show {
+      transform: translateY(0);
+    }
+
+    /* Room Grid for AI */
+    .room-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(90px, 1fr));
+      gap: 10px;
+      margin-top: 0.5rem;
+    }
+
+    .room-card {
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 1rem 0.5rem;
+      text-align: center;
+      cursor: pointer;
+      transition: var(--transition);
+      background: rgba(15, 23, 42, 0.4);
+    }
+
+    .room-card:hover {
+      border-color: var(--primary-hover);
+      transform: translateY(-2px);
+      background: rgba(15, 23, 42, 0.8);
+    }
+
+    .room-card.selected {
+      border-color: var(--primary);
+      background: rgba(59, 130, 246, 0.2);
+    }
+
+    .room-card .num {
+      font-size: 1.2rem;
+      font-weight: 700;
+      color: white;
+    }
+
+    .room-card .score {
+      font-size: 0.75rem;
+      font-weight: 600;
+      color: var(--success);
+      margin-top: 4px;
+    }
+
+    /* Modals */
+    .modal-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      background: rgba(15, 23, 42, 0.85);
+      backdrop-filter: blur(12px);
+      z-index: 2000;
+      display: none;
+      justify-content: center;
+      align-items: center;
+      opacity: 0;
+      transition: opacity 0.3s ease;
+    }
+
+    .modal-overlay.active {
+      display: flex;
+      opacity: 1;
+    }
+
+    .login-card {
+      background: var(--surface);
+      border-radius: 24px;
+      padding: 2.5rem;
+      width: 100%;
+      max-width: 420px;
+      box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+      border: 1px solid var(--border);
+      position: relative;
+      transform: translateY(20px);
+      transition: transform 0.3s ease;
+      color: white;
+    }
+
+    .modal-overlay.active .login-card {
+      transform: translateY(0);
+    }
+
+    .close-btn {
+      position: absolute;
+      top: 1.5rem;
+      right: 1.5rem;
+      background: rgba(255,255,255,0.05);
+      border: 1px solid var(--border);
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      cursor: pointer;
+      color: #94a3b8;
+      font-weight: bold;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: var(--transition);
+    }
+
+    .close-btn:hover {
+      background: rgba(239, 68, 68, 0.2);
+      color: var(--danger);
+      border-color: var(--danger);
+    }
+  </style>
+</head>
+<body>
+
+  <div class="bg-student" id="bgStudent"></div>
+  <div class="orb orb-1"></div>
+  <div class="orb orb-2"></div>
+  <div class="orb orb-3"></div>
+
+  <header id="mainHeader">
+    <div class="logo" style="display:flex; align-items:center;">
+      <img src="/static/logo.png" alt="Logo" style="height: 32px; vertical-align: middle; margin-right: 10px;">
+      Hostel<span>ALLOC</span>
+    </div>
+    <nav id="studentNav">
+      <button class="nav-btn" onclick="showView('landing')">Home</button>
+      <button class="nav-btn" onclick="openStudentLogin()">Student Portal</button>
+      <button class="btn-primary" onclick="openAdminLogin()">Admin Login</button>
+    </nav>
+    <nav id="adminNav" style="display:none;">
+      <span style="font-weight: 600; margin-right: 1rem; color: white;">Warden Access</span>
+      <button class="btn-primary" style="background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2);" onclick="logoutAdmin()">Log Out</button>
+    </nav>
+  </header>
+
+  <!-- Modals -->
+  <div class="modal-overlay" id="adminLoginModal">
+    <div class="login-card">
+      <button class="close-btn" onclick="closeModals()">✕</button>
+      <h2 style="font-size: 1.8rem; margin-bottom: 0.5rem; color: var(--primary-hover);">Warden Login</h2>
+      <p style="color: #94a3b8; margin-bottom: 2rem;">Enter credentials to access the admin dashboard.</p>
+      <div class="form-group"><label>Login ID</label><input type="text" id="adminId" placeholder="e.g. warden" /></div>
+      <div class="form-group"><label>Password</label><input type="password" id="adminPass" placeholder="••••••••" /></div>
+      <button class="btn-primary" style="width: 100%; padding: 14px; font-size: 1.1rem; margin-top: 1rem;" onclick="attemptAdminLogin()">Log In</button>
+    </div>
+  </div>
+
+  <div class="modal-overlay" id="studentLoginModal">
+    <div class="login-card">
+      <button class="close-btn" onclick="closeModals()">✕</button>
+      <h2 style="font-size: 1.8rem; margin-bottom: 0.5rem; color: var(--primary-hover);">Student Portal</h2>
+      <p style="color: #94a3b8; margin-bottom: 2rem;">Sign up or Log in to apply and track status.</p>
+      <div class="form-group"><label>Full Name</label><input type="text" id="loginName" placeholder="e.g. Aarav Sharma" /></div>
+      <div class="form-group"><label>Phone Number</label><input type="tel" id="loginPhone" placeholder="+91 9876543210" /></div>
+      <div class="form-group"><label>ID Card Number</label><input type="text" id="loginIdCard" placeholder="e.g. 22CS1045" /></div>
+      <button class="btn-primary" style="width: 100%; padding: 14px; font-size: 1.1rem; margin-top: 1rem;" onclick="attemptStudentLogin()">Proceed</button>
+    </div>
+  </div>
+
+  <!-- ================= STUDENT VIEWS ================= -->
+
+  <div id="view-landing" class="view active">
+    <div class="hero">
+      <h1>Welcome to Premium Living.</h1>
+      <p>Experience smart, AI-driven hostel room allocation that pairs you with the perfect roommates based on your lifestyle and preferences.</p>
+      <div class="hero-btns">
+        <button class="btn-primary" style="padding: 16px 40px; font-size: 1.1rem;" onclick="openStudentLogin()">Student Portal (Apply / Track)</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="view-apply" class="view">
+    <div class="glass-card">
+      <div style="display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 1rem;">
+        <div>
+          <h2 style="font-size: 1.8rem; color: white;">Hostel Application Form</h2>
+          <p style="color: #94a3b8; font-size: 0.9rem;">Please complete your profile to apply for accommodation.</p>
+        </div>
+      </div>
+
+      <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 1rem; margin-bottom: 0.5rem;">
+        <div class="form-group"><label>Full Name</label><input type="text" id="app_name" readonly style="opacity: 0.7;" /></div>
+        <div class="form-group"><label>ID Card Number</label><input type="text" id="app_id" readonly style="opacity: 0.7;" /></div>
+        <div class="form-group"><label>Phone Number</label><input type="tel" id="app_phone" readonly style="opacity: 0.7;" /></div>
+        <div class="form-group"><label>Email Address</label><input type="email" id="app_email" placeholder="student@university.edu" /></div>
+        
+        <div class="form-group"><label>Date of Birth</label><input type="date" id="app_dob" /></div>
+        <div class="form-group"><label>Blood Group</label>
+          <select id="app_blood">
+            <option>A+</option><option>A-</option><option>B+</option><option>B-</option>
+            <option>O+</option><option>O-</option><option>AB+</option><option>AB-</option>
+          </select>
+        </div>
+        <div class="form-group"><label>Parent/Guardian Phone</label><input type="tel" id="app_parent_phone" placeholder="Emergency Contact" /></div>
+        <div class="form-group"><label>Permanent Address</label><input type="text" id="app_address" placeholder="City, State, Zip" /></div>
+        
+        <div class="form-group"><label>Father's Name</label><input type="text" id="app_father" placeholder="e.g. Mr. Sharma" /></div>
+        <div class="form-group"><label>Family Annual Income (₹)</label><input type="number" id="app_income" placeholder="e.g. 500000" /></div>
+        <div class="form-group"><label>Hometown</label><input type="text" id="app_hometown" placeholder="City/Village" /></div>
+        <div class="form-group" style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.5rem;">
+          <div><label>Branch</label>
+            <select id="app_branch">
+              <option>CS</option><option>EC</option><option>ME</option><option>AIML</option><option>ISE</option>
+            </select>
+          </div>
+          <div><label>Sem</label>
+            <select id="app_sem"><option>1</option><option>2</option><option>3</option><option>4</option><option>5</option></select>
+          </div>
+        </div>
+      </div>
+
+      <div style="display: grid; grid-template-columns: 1fr 2.5fr; gap: 1rem; margin-bottom: 0.5rem;">
+        <div class="form-group"><label>Room Type Preference</label>
+          <select id="app_roomType">
+            <option>Single Occupancy</option><option selected>Double Sharing</option><option>Triple Sharing</option>
+          </select>
+        </div>
+        <div class="form-group"><label>Lifestyle Preferences (Select all that apply)</label>
+          <div id="app_tags" style="display: flex; flex-wrap: wrap; gap: 4px;">
+            <button class="tag-btn" onclick="this.classList.toggle('active')">Early Riser</button>
+            <button class="tag-btn" onclick="this.classList.toggle('active')">Night Owl</button>
+            <button class="tag-btn" onclick="this.classList.toggle('active')">Vegetarian</button>
+            <button class="tag-btn" onclick="this.classList.toggle('active')">Quiet Study</button>
+            <button class="tag-btn" onclick="this.classList.toggle('active')">Non-smoker</button>
+          </div>
+        </div>
+      </div>
+
+      <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 1rem; margin-bottom: 0.5rem;">
+        <div class="form-group"><label>Additional Requirements / Medical Needs</label>
+          <input type="text" id="app_requirements" placeholder="Any specific needs we should know about?" />
+        </div>
+        <div class="form-group"><label>Upload Document (Optional)</label>
+          <input type="file" style="padding: 7px 10px;" />
+        </div>
+      </div>
+
+      <button class="btn-primary" style="width: 100%; padding: 12px; font-size: 1.05rem; margin-top: 0.5rem;" onclick="submitApplication()">Submit Application</button>
+    </div>
+  </div>
+
+  <div id="view-track" class="view">
+    <div class="glass-card status-box">
+      <h2 style="font-size: 2.2rem; margin-bottom: 0.5rem; color: white;">Your Application Status</h2>
+
+      <div id="statusResult" style="margin-top: 1rem;">
+        <h3 id="srName" style="font-size: 1.5rem; margin-bottom: 10px; color: white;">Name</h3>
+        <span id="srChip" class="chip pending" style="font-size: 0.9rem; padding: 6px 16px;">Pending</span>
+        <p id="srMsg" style="margin-top: 15px; color: #cbd5e1;"></p>
+
+        <button id="btnDownload" class="btn-primary" style="display: none; margin: 20px auto 0 auto; padding: 10px 24px;" onclick="document.getElementById('allocationLetter').style.display='block'">View Allocation Letter</button>
+      </div>
+
+      <!-- Allocation Letter Template -->
+      <div id="allocationLetter" class="letter-preview">
+        <div style="display: flex; justify-content: space-between; border-bottom: 2px solid #e2e8f0; padding-bottom: 1rem; margin-bottom: 1.5rem;">
+          <div>
+            <h2 style="color: var(--primary);">HostelAI</h2>
+            <p style="font-size: 0.85rem; color: #64748b;">Official Allocation Document</p>
+          </div>
+          <div style="text-align: right;">
+            <p style="font-weight: 600; font-size: 0.9rem;">Date: <span id="alDate"></span></p>
+          </div>
+        </div>
+        <h3 style="text-align: center; margin-bottom: 1.5rem; font-size: 1.1rem;">PROVISIONAL HOSTEL ALLOCATION LETTER</h3>
+        <p style="margin-bottom: 1rem; font-size: 0.9rem;">This is to certify that <strong><span id="alName"></span></strong> (ID: <strong><span id="alId"></span></strong>) of Branch <strong><span id="alBranch"></span></strong> has been allocated accommodation.</p>
+
+        <div style="background: #f8fafc; padding: 1rem; border-radius: 8px; margin-bottom: 1.5rem; display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+          <div>
+            <p style="color: #64748b; font-size: 0.8rem;">Allocated Room</p>
+            <p style="font-size: 1.2rem; font-weight: 700; color: var(--primary);">Room <span id="alRoom"></span></p>
+          </div>
+          <div>
+            <p style="color: #64748b; font-size: 0.8rem;">Room Type</p>
+            <p style="font-size: 1rem; font-weight: 600;"><span id="alType"></span></p>
+          </div>
+        </div>
+        <p style="font-size: 0.85rem; color: #64748b; line-height: 1.5;">Please report to the Hostel Warden within 7 days. This allocation was generated by the AI Matching Engine.</p>
+        <div style="margin-top: 2rem; text-align: right; border-top: 1px dashed #cbd5e1; padding-top: 1rem;">
+          <p style="font-weight: 600; font-size: 0.9rem;">Chief Warden</p>
+        </div>
+        <button class="btn-primary" style="margin-top: 1.5rem; width: 100%;" onclick="window.print()">🖨️ Print as PDF</button>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ================= ADMIN VIEWS ================= -->
+  <div id="view-admin" class="view" style="padding: 1.5rem 4rem;">
+    <div class="dashboard-grid">
+      <div class="sidebar">
+        <div style="margin-bottom: 1.5rem; padding: 0 10px;">
+          <p style="font-size: 0.8rem; color: #94a3b8; font-weight: 700; text-transform: uppercase; letter-spacing: 1px;">Menu</p>
+        </div>
+        <a class="side-link active" onclick="switchAdminTab('overview', this)">📊 Overview</a>
+        <a class="side-link" onclick="switchAdminTab('pending', this)">📝 Applications <span id="pendingCountBadge" style="background: var(--danger); color: white; padding: 2px 8px; border-radius: 10px; font-size: 0.75rem; float: right;">0</span></a>
+        <a class="side-link" onclick="switchAdminTab('directory', this)">🧑‍🎓 Student Directory</a>
+      </div>
+
+      <div class="admin-content">
+        <!-- Admin: Overview -->
+        <div id="tab-overview" class="admin-tab">
+          <h2 style="font-size: 1.8rem; margin-bottom: 1rem; color: white;">Dashboard Overview</h2>
+          <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem; height: 120px;">
+            <div class="admin-card" style="margin:0; justify-content: center;">
+              <h3 style="color:#94a3b8; font-size:0.9rem; font-family:'Inter'">Total Rooms</h3>
+              <p id="statTotal" style="font-size:2rem; font-weight:700;">-</p>
+            </div>
+            <div class="admin-card" style="margin:0; justify-content: center;">
+              <h3 style="color:#94a3b8; font-size:0.9rem; font-family:'Inter'">Allocated</h3>
+              <p id="statAllocated" style="font-size:2rem; font-weight:700; color:var(--success)">-</p>
+            </div>
+            <div class="admin-card" style="margin:0; justify-content: center;">
+              <h3 style="color:#94a3b8; font-size:0.9rem; font-family:'Inter'">Pending Apps</h3>
+              <p id="statPending" style="font-size:2rem; font-weight:700; color:var(--warning)">-</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Admin: Pending Applications -->
+        <div id="tab-pending" class="admin-tab" style="display:none;">
+          <h2 style="font-size: 1.8rem; margin-bottom: 1rem; color: white;">Pending Applications</h2>
+
+          <div class="admin-card" id="pendingTableCard" style="flex: 1; padding: 0;">
+            <div class="table-container">
+              <table id="pendingTable">
+                <thead>
+                  <tr>
+                    <th>Student</th>
+                    <th>ID</th>
+                    <th>Branch</th>
+                    <th>Action</th>
+                  </tr>
+                </thead>
+                <tbody></tbody>
+              </table>
+            </div>
+          </div>
+
+          <!-- Detailed Application View -->
+          <div id="appDetailView" class="admin-card" style="display:none; flex: 1; overflow-y: auto;">
+            <button style="background: rgba(255,255,255,0.05); color: #cbd5e1; border: 1px solid var(--border); padding: 6px 14px; border-radius: 20px; cursor: pointer; font-weight: 500; margin-bottom: 1rem; width: fit-content;" onclick="closeAppDetail()">← Back to List</button>
+
+            <h3 id="detName" style="font-size: 1.5rem; margin-bottom: 0.2rem; color: var(--primary-hover);">Student Name</h3>
+            <p id="detIdBranch" style="color: #94a3b8; font-weight: 500; margin-bottom: 1rem;">ID • Branch</p>
+
+            <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 0.8rem; background: rgba(15,23,42,0.4); padding: 1rem; border-radius: 12px; margin-bottom: 1rem; border: 1px solid var(--border);">
+              <div><strong style="color: #94a3b8; font-size: 0.75rem; display: block;">Father's Name</strong><span id="detFather" style="font-size: 0.85rem;"></span></div>
+              <div><strong style="color: #94a3b8; font-size: 0.75rem; display: block;">Family Income</strong><span id="detIncome" style="font-size: 0.85rem;"></span></div>
+              <div><strong style="color: #94a3b8; font-size: 0.75rem; display: block;">Hometown</strong><span id="detHometown" style="font-size: 0.85rem;"></span></div>
+              <div><strong style="color: #94a3b8; font-size: 0.75rem; display: block;">Phone</strong><span id="detPhone" style="font-size: 0.85rem;"></span></div>
+              <div><strong style="color: #94a3b8; font-size: 0.75rem; display: block;">Blood Grp</strong><span id="detBlood" style="font-size: 0.85rem;"></span></div>
+              <div style="grid-column: span 3;"><strong style="color: #94a3b8; font-size: 0.75rem; display: block;">Lifestyle Prefs</strong><span id="detPrefs" style="font-size: 0.85rem;"></span></div>
+              <div style="grid-column: span 4;"><strong style="color: #94a3b8; font-size: 0.75rem; display: block;">Additional Requirements</strong><span id="detReqs" style="font-size: 0.85rem;"></span></div>
+            </div>
+
+            <button class="btn-primary" style="padding: 10px; font-size: 1rem; width: 100%;" onclick="predictRoom()">Predict Room as per Preference 🤖</button>
+          </div>
+
+          <!-- AI Match Panel -->
+          <div id="aiMatchPanel" class="admin-card" style="display:none; margin-top: 1rem; background: rgba(30,58,138,0.2); border-color: var(--primary-hover); flex: 1; overflow-y: auto;">
+            <h3 style="margin-bottom: 0.5rem; color: var(--primary-hover); font-size: 1.2rem;">🤖 AI Matching Engine</h3>
+            <p id="aiMatchTarget" style="font-weight: 500; font-size: 0.9rem; margin-bottom: 0.8rem;"></p>
+            <div class="room-grid" id="aiRoomGrid"></div>
+
+            <div id="aiExplanation" style="margin-top: 1rem; padding: 1rem; background: rgba(15,23,42,0.6); border: 1px solid var(--border); border-radius: 12px; display: none;">
+              <p style="font-weight: 600; font-size: 0.9rem; margin-bottom: 0.5rem; color: var(--success);">Claude Recommendation:</p>
+              <p id="aiExplText" style="color: #cbd5e1; font-size: 0.85rem; line-height: 1.5;"></p>
+              <button class="btn-primary" style="margin-top: 1rem; width: 100%; padding: 10px;" onclick="confirmAllocation()">Approve & Allocate Selected Room</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Admin: Student Directory -->
+        <div id="tab-directory" class="admin-tab" style="display:none;">
+          <h2 style="font-size: 1.8rem; margin-bottom: 1rem; color: white;">Student Directory</h2>
+          <div class="admin-card" style="flex: 1; padding: 0;">
+            <div class="table-container">
+              <table id="directoryTable">
+                <thead>
+                  <tr>
+                    <th>Student</th>
+                    <th>ID</th>
+                    <th>Branch</th>
+                    <th>Room</th>
+                    <th>Status</th>
+                    <th>Action</th>
+                  </tr>
+                </thead>
+                <tbody></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="toast" id="toast">Message</div>
+
+  <script>
+    const API_URL = 'http://127.0.0.1:8000';
+    let isAdmin = false;
+    let currentAppToProcess = null;
+    let selectedRoomToAllocate = null;
+    let currentStudentSession = null;
+
+    function showToast(msg) {
+      const t = document.getElementById('toast');
+      t.innerText = msg; t.classList.add('show');
+      setTimeout(() => t.classList.remove('show'), 3000);
+    }
+
+    function openAdminLogin() { document.getElementById('adminLoginModal').classList.add('active'); }
+    function openStudentLogin() { document.getElementById('studentLoginModal').classList.add('active'); }
+    function closeModals() {
+      document.getElementById('adminLoginModal').classList.remove('active');
+      document.getElementById('studentLoginModal').classList.remove('active');
+    }
+
+    function attemptAdminLogin() {
+      const id = document.getElementById('adminId').value;
+      const pass = document.getElementById('adminPass').value;
+      if (id === 'warden' && pass === 'warden123') {
+        closeModals();
+        toggleAdminMode(true);
+        showToast('Welcome, Warden!');
+      } else {
+        showToast('❌ Invalid Credentials (try warden / warden123)');
+      }
+    }
+
+    function logoutAdmin() {
+      toggleAdminMode(false);
+      showToast('Logged out successfully');
+    }
+
+    async function attemptStudentLogin() {
+      const name = document.getElementById('loginName').value;
+      const phone = document.getElementById('loginPhone').value;
+      const idCard = document.getElementById('loginIdCard').value;
+
+      if (!name || !phone || !idCard) { showToast('Please fill all fields'); return; }
+
+      currentStudentSession = { name, phone, student_id: idCard };
+      closeModals();
+      showToast('Welcome, ' + name);
+
+      // Check if they already have an application
+      try {
+        const res = await fetch(`${API_URL}/applications/${idCard}`);
+        if (res.ok) {
+          // Exists! Go to tracking page
+          showView('track');
+          checkStatus(idCard);
+        } else {
+          // Doesn't exist, go to apply page and pre-fill
+          document.getElementById('app_name').value = name;
+          document.getElementById('app_id').value = idCard;
+          document.getElementById('app_phone').value = phone;
+          showView('apply');
+        }
+      } catch (e) { showToast('Error connecting to server'); }
+    }
+
+    function toggleAdminMode(enable) {
+      isAdmin = enable;
+      document.getElementById('mainHeader').className = enable ? 'admin-mode' : '';
+      // We removed bgAdmin, so we don't toggle it. We just rely on universal dark mode.
+      document.getElementById('studentNav').style.display = enable ? 'none' : 'flex';
+      document.getElementById('adminNav').style.display = enable ? 'flex' : 'none';
+
+      if (enable) {
+        showView('admin');
+        loadAdminData();
+      } else {
+        showView('landing');
+      }
+    }
+
+    function showView(viewId) {
+      document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+      document.getElementById('view-' + viewId).classList.add('active');
+    }
+
+    function switchAdminTab(tabId, el) {
+      document.querySelectorAll('.side-link').forEach(l => l.classList.remove('active'));
+      el.classList.add('active');
+      document.querySelectorAll('.admin-tab').forEach(t => t.style.display = 'none');
+      document.getElementById('tab-' + tabId).style.display = 'block';
+      if (tabId === 'directory') loadAdminData();
+    }
+
+    // === STUDENT FUNCTIONS ===
+    async function submitApplication() {
+      const payload = {
+        name: document.getElementById('app_name').value,
+        student_id: document.getElementById('app_id').value,
+        branch: document.getElementById('app_branch').value,
+        semester: parseInt(document.getElementById('app_sem').value),
+        gender: 'Male', // Default for now
+        preferences: [...document.querySelectorAll('#app_tags .tag-btn.active')].map(b => b.innerText),
+        room_type: document.getElementById('app_roomType').value,
+        // extra info
+        email: document.getElementById('app_email').value,
+        dob: document.getElementById('app_dob').value,
+        blood_group: document.getElementById('app_blood').value,
+        parent_phone: document.getElementById('app_parent_phone').value,
+        address: document.getElementById('app_address').value,
+        father_name: document.getElementById('app_father').value,
+        family_income: document.getElementById('app_income').value,
+        hometown: document.getElementById('app_hometown').value,
+        requirements: document.getElementById('app_requirements').value
+      };
+
+      if (!payload.name || !payload.student_id) { showToast('Please fill all fields'); return; }
+
+      try {
+        const res = await fetch(`${API_URL}/applications`, {
+          method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload)
+        });
+        if (res.ok) {
+          showToast('🎉 Application submitted successfully!');
+          showView('track');
+          checkStatus(payload.student_id);
+        }
+      } catch (e) { showToast('Error submitting application'); }
+    }
+
+    async function checkStatus(sid) {
+      if (!sid) return;
+      try {
+        const res = await fetch(`${API_URL}/applications/${sid}`);
+        if (!res.ok) { showToast('Application not found'); return; }
+        const data = await res.json();
+
+        document.getElementById('statusResult').style.display = 'block';
+        document.getElementById('srName').innerText = data.name;
+        const chip = document.getElementById('srChip');
+
+        if (data.status === 'allocated') {
+          chip.className = 'chip allocated'; chip.innerText = 'Allocated - Room ' + data.room;
+          document.getElementById('srMsg').innerText = 'Congratulations! Your room has been allocated.';
+          document.getElementById('btnDownload').style.display = 'block';
+
+          // Populate Letter
+          document.getElementById('alDate').innerText = new Date().toLocaleDateString();
+          document.getElementById('alName').innerText = data.name;
+          document.getElementById('alId').innerText = data.student_id;
+          document.getElementById('alBranch').innerText = data.branch;
+          document.getElementById('alRoom').innerText = data.room;
+          document.getElementById('alType').innerText = data.room_type || 'Double Sharing';
+        } else {
+          chip.className = 'chip pending'; chip.innerText = 'Pending AI Match';
+          document.getElementById('srMsg').innerText = 'Your application is under review by the AI engine.';
+          document.getElementById('btnDownload').style.display = 'none';
+          document.getElementById('allocationLetter').style.display = 'none';
+        }
+      } catch (e) { showToast('Error connecting to server'); }
+    }
+
+    // === ADMIN FUNCTIONS ===
+    async function loadAdminData() {
+      try {
+        // Stats
+        const stRes = await fetch(`${API_URL}/stats`);
+        if (stRes.ok) {
+          const stats = await stRes.json();
+          document.getElementById('statTotal').innerText = stats.total_rooms || '-';
+          document.getElementById('statAllocated').innerText = stats.allocated || '0';
+        }
+
+        // Students
+        const stdRes = await fetch(`${API_URL}/students`);
+        if (stdRes.ok) {
+          const data = await stdRes.json();
+          const allStd = data.students || [];
+
+          const pending = allStd.filter(s => s.status === 'pending');
+          const allocated = allStd.filter(s => s.status === 'allocated');
+
+          document.getElementById('statPending').innerText = pending.length;
+          document.getElementById('pendingCountBadge').innerText = pending.length;
+
+          // Pending Table
+          document.getElementById('pendingTable').querySelector('tbody').innerHTML = pending.map(s => `
+        <tr>
+          <td><strong>${s.name}</strong></td><td>${s.student_id}</td><td>${s.branch}</td>
+          <td><button class="btn-primary" style="padding: 6px 14px; font-size:0.85rem; background: var(--secondary);" onclick='viewApplicationDetails(${JSON.stringify(s).replace(/'/g, "&apos;")})'>View Application</button></td>
+        </tr>
+      `).join('');
+
+          // Directory Table
+          document.getElementById('directoryTable').querySelector('tbody').innerHTML = allocated.map(s => `
+        <tr>
+          <td><strong>${s.name}</strong></td><td>${s.student_id}</td><td>${s.branch}</td>
+          <td>Room ${s.room}</td>
+          <td><span class="chip allocated">Allocated</span></td>
+          <td><button class="btn-danger" onclick="deleteStudent('${s.student_id}')">Revoke & Delete</button></td>
+        </tr>
+      `).join('');
+        }
+      } catch (e) { console.error('Admin data load failed', e); }
+    }
+
+    function viewApplicationDetails(studentData) {
+      currentAppToProcess = studentData;
+      document.getElementById('pendingTableCard').style.display = 'none';
+      document.getElementById('aiMatchPanel').style.display = 'none';
+      document.getElementById('appDetailView').style.display = 'flex';
+      document.getElementById('appDetailView').style.flexDirection = 'column';
+
+      document.getElementById('detName').innerText = studentData.name || 'N/A';
+      document.getElementById('detIdBranch').innerText = `${studentData.student_id} • ${studentData.branch} (Sem ${studentData.semester})`;
+
+      document.getElementById('detFather').innerText = studentData.father_name || 'Not provided';
+      document.getElementById('detIncome').innerText = studentData.family_income ? `₹${studentData.family_income}` : 'Not provided';
+      document.getElementById('detHometown').innerText = studentData.hometown || 'Not provided';
+      document.getElementById('detPhone').innerText = studentData.phone || studentData.parent_phone || 'Not provided';
+      document.getElementById('detBlood').innerText = studentData.blood_group || 'Not provided';
+      document.getElementById('detPrefs').innerText = (studentData.preferences && studentData.preferences.length > 0) ? studentData.preferences.join(', ') : 'None';
+      document.getElementById('detReqs').innerText = studentData.requirements || 'No additional requirements.';
+    }
+
+    function closeAppDetail() {
+      document.getElementById('appDetailView').style.display = 'none';
+      document.getElementById('aiMatchPanel').style.display = 'none';
+      document.getElementById('pendingTableCard').style.display = 'flex';
+      document.getElementById('pendingTableCard').style.flexDirection = 'column';
+    }
+
+    function predictRoom() {
+      processMatch(currentAppToProcess);
+    }
+
+    async function processMatch(studentData) {
+      document.getElementById('aiMatchPanel').style.display = 'block';
+      document.getElementById('aiMatchTarget').innerText = `Finding best room for ${studentData.name} (${studentData.branch})...`;
+      document.getElementById('aiRoomGrid').innerHTML = '<p>Loading AI Recommendations...</p>';
+      document.getElementById('aiExplanation').style.display = 'none';
+      selectedRoomToAllocate = null;
+
+      try {
+        const res = await fetch(`${API_URL}/ai/recommend`, {
+          method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(studentData)
+        });
+        if (!res.ok) {
+          const err = await res.json();
+          document.getElementById('aiRoomGrid').innerHTML = `<p style="color:var(--danger)">${err.detail || 'Error'}</p>`;
+          return;
+        }
+        const data = await res.json();
+
+        document.getElementById('aiRoomGrid').innerHTML = '';
+        data.top_recommendations.slice(0, 5).forEach(r => {
+          const d = document.createElement('div');
+          d.className = 'room-card';
+          d.innerHTML = `<div class="num">${r.room_number}</div><div class="score">${r.combined_score}% Match</div>`;
+          d.onclick = () => {
+            document.querySelectorAll('.room-card').forEach(c => c.classList.remove('selected'));
+            d.classList.add('selected');
+            selectedRoomToAllocate = r.room_number;
+          };
+          document.getElementById('aiRoomGrid').appendChild(d);
+        });
+
+        document.getElementById('aiExplanation').style.display = 'block';
+        document.getElementById('aiExplText').innerText = data.ai_explanation;
+      } catch (e) { showToast('Backend connection failed'); }
+    }
+
+    async function confirmAllocation() {
+      if (!selectedRoomToAllocate) { showToast('Please select a room first'); return; }
+      try {
+        const res = await fetch(`${API_URL}/allocate`, {
+          method: 'POST', headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ student: currentAppToProcess, room_number: selectedRoomToAllocate })
+        });
+        if (res.ok) {
+          showToast('Room successfully allocated!');
+          document.getElementById('aiMatchPanel').style.display = 'none';
+          closeAppDetail();
+          loadAdminData();
+        } else {
+          showToast('Allocation failed');
+        }
+      } catch (e) { showToast('Connection failed'); }
+    }
+
+    async function deleteStudent(studentId) {
+      if (!confirm('Are you sure you want to revoke this room and delete the student?')) return;
+      try {
+        const res = await fetch(`${API_URL}/students/${studentId}`, { method: 'DELETE' });
+        if (res.ok) {
+          showToast('Student deleted and room freed');
+          loadAdminData();
+        }
+      } catch (e) { showToast('Delete failed'); }
+    }
+
+  </script>
+</body>
+</html>
